@@ -1,6 +1,6 @@
+# display file starts
+
 from direct.task import Task
-from panda3d.core import KeyboardButton
-from panda3d.core import load_prc_file_data
 
 
 def setup_camera(app):
@@ -44,3 +44,6 @@ def setup_camera(app):
 
     # Task for continuous camera movement
     app.taskMgr.add(move_camera, "MoveCameraTask")
+
+
+# display file ends

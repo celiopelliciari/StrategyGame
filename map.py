@@ -1,3 +1,5 @@
+# map file starts
+
 from panda3d.core import GeomVertexFormat, GeomVertexData, GeomVertexWriter
 from panda3d.core import Geom, GeomTriangles, GeomNode
 import math
@@ -31,19 +33,16 @@ class Hexagon:
             'infrastructure': self.infrastructure
         }
 
-    def save_to_json(self, province):
-        data = {
-            'Province': province,
-            'hexagons': self.to_dict()
-        }
-        with open('hexagon_data.json', 'a') as f:
-            json.dump(data, f)
+    def save_to_json(self, file_path):
+        with open(file_path, 'a') as f:
+            json.dump(self.to_dict(), f)
             f.write('\n')
 
 
 def create_hexagon_grid(parent_node, rows=40, cols=100, size=1.0):
     vertex_format = GeomVertexFormat.getV3()
 
+    # Remove existing hexagon_data.json file if it exists
     if os.path.exists('hexagon_data.json'):
         os.remove('hexagon_data.json')
 
@@ -97,9 +96,12 @@ def create_hexagon_grid(parent_node, rows=40, cols=100, size=1.0):
             province_key = f'Province_{row}_{col}'
             if province_key not in province_data:
                 province_data[province_key] = []
-            hexagon.save_to_json(province_key)
+            hexagon.save_to_json('hexagon_data.json')
             province_data[province_key].append(hexagon.to_dict())
 
     # Save all province data to JSON file
     with open('hexagon_data.json', 'w') as f:
         json.dump(province_data, f, indent=4)
+
+
+# map file ends

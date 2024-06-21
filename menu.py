@@ -1,6 +1,6 @@
 # menu.py starts
-
-from direct.gui.DirectGui import DirectFrame, DirectButton
+from direct.gui.DirectGui import DirectFrame, DirectButton, OnscreenImage
+from panda3d.core import TransparencyAttrib
 
 
 class Menu:
@@ -13,6 +13,12 @@ class Menu:
         self.menu_frame = DirectFrame(frameSize=(-1, 1, -1, 1),
                                       frameColor=(0, 0, 0, 0.5),
                                       parent=self.base.aspect2d)
+
+        # Add background image
+        self.background_image = OnscreenImage(parent=self.menu_frame,
+                                              image='background.jpg',  # Path to your background image
+                                              scale=(1.33, 1, 1))  # Adjust the scale as needed
+        self.background_image.setTransparency(TransparencyAttrib.MAlpha)
 
         # Create a start button
         self.start_button = DirectButton(text="Start Game",
@@ -35,6 +41,10 @@ class Menu:
 
     def exit_game(self):
         self.base.userExit()  # Close the game
+
+
+# menu.py ends
+
 
 
 # menu.py ends

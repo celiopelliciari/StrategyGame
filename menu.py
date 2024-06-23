@@ -1,3 +1,5 @@
+# TODO: loading screen
+
 # menu.py starts
 from direct.gui.DirectGui import DirectFrame, DirectButton, OnscreenImage
 from panda3d.core import TransparencyAttrib
@@ -16,7 +18,7 @@ class Menu:
 
         # Add background image
         self.background_image = OnscreenImage(parent=self.menu_frame,
-                                              image='background.jpg',  # Path to your background image
+                                              image='menu_background.jpg',  # Path to your background image
                                               scale=(1.33, 1, 1))  # Adjust the scale as needed
         self.background_image.setTransparency(TransparencyAttrib.MAlpha)
 
@@ -41,10 +43,6 @@ class Menu:
 
     def exit_game(self):
         self.base.userExit()  # Close the game
-
-
-# menu.py ends
-
 
 
 # menu.py ends

@@ -1,7 +1,6 @@
-# map file starts
+# map.py
 
-from panda3d.core import GeomVertexFormat, GeomVertexData, GeomVertexWriter
-from panda3d.core import Geom, GeomTriangles, GeomNode
+from panda3d.core import GeomVertexFormat, GeomVertexData, GeomVertexWriter, Geom, GeomTriangles, GeomNode, TexturePool
 import math
 import json
 import os
@@ -38,9 +37,20 @@ class Hexagon:
             json.dump(self.to_dict(), f)
             f.write('\n')
 
+    def set_is_land(self, row, col):
+        # Set is_land to True for hexagons between [16, 40] and [64, 160], otherwise False
+        if 16 <= row <= 40 and 64 <= col <= 160:
+            self.is_land = True
+        else:
+            self.is_land = False
 
-def create_hexagon_grid(parent_node, rows=40, cols=100, size=1.0):
-    vertex_format = GeomVertexFormat.getV3()
+
+def create_hexagon_grid(parent_node, rows=160, cols=400, size=1.0):
+    vertex_format = GeomVertexFormat.getV3t2()  # Include texture coordinates
+
+    # Load textures
+    water_texture = TexturePool.load_texture("water_texture.jpg")
+    terrain_texture = TexturePool.load_texture("terrain_texture.jpg")
 
     # Remove existing hexagon_data.json file if it exists
     if os.path.exists('hexagon_data.json'):
@@ -52,10 +62,12 @@ def create_hexagon_grid(parent_node, rows=40, cols=100, size=1.0):
         for col in range(cols):
             hex_id = f'{row}_{col}'
             hexagon = Hexagon(hex_id)  # Create Hexagon instance
-            hexagon.set_attributes(None, None, None, None, None)  # Initialize attributes as None
+            hexagon.set_is_land(row, col)  # Set is_land attribute
+            hexagon.set_attributes(hexagon.is_land, None, None, None, None)  # Initialize attributes
 
             vertex_data = GeomVertexData('hexagon', vertex_format, Geom.UHStatic)
             vertex_writer = GeomVertexWriter(vertex_data, 'vertex')
+            texcoord_writer = GeomVertexWriter(vertex_data, 'texcoord')
 
             # Calculate the position offset for each hexagon
             x_offset = col * 3 / 2 * size
@@ -70,9 +82,17 @@ def create_hexagon_grid(parent_node, rows=40, cols=100, size=1.0):
                 for i in range(6)
             ]
 
-            # Add the vertices to the writer
-            for vertex in vertices:
+            # Texture coordinates for a rectangular image mapped onto a hexagon
+            texcoords = [
+                (0.5 + 0.5 * math.cos(angle_offset + i * math.pi / 3),
+                 0.5 + 0.5 * math.sin(angle_offset + i * math.pi / 3))
+                for i in range(6)
+            ]
+
+            # Add the vertices and texture coordinates to the writers
+            for vertex, texcoord in zip(vertices, texcoords):
                 vertex_writer.addData3(*vertex)
+                texcoord_writer.addData2(*texcoord)
 
             # Define the triangles to form the hexagon
             triangles = GeomTriangles(Geom.UHStatic)
@@ -90,7 +110,12 @@ def create_hexagon_grid(parent_node, rows=40, cols=100, size=1.0):
 
             # Attach the hexagon to the render tree
             hex_node = parent_node.attachNewNode(geom_node)
-            hex_node.setColor(0, 1, 0, 1)  # Set color to green
+
+            # Apply the appropriate texture
+            if hexagon.is_land:
+                hex_node.setTexture(terrain_texture)
+            else:
+                hex_node.setTexture(water_texture)
 
             # Save hexagon attributes to JSON file
             province_key = f'Province_{row}_{col}'
@@ -102,6 +127,3 @@ def create_hexagon_grid(parent_node, rows=40, cols=100, size=1.0):
     # Save all province data to JSON file
     with open('hexagon_data.json', 'w') as f:
         json.dump(province_data, f, indent=4)
-
-
-# map file ends

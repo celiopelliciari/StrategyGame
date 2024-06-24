@@ -2,7 +2,7 @@
 
 from direct.showbase.ShowBase import ShowBase
 from ui import MenuUI
-from event_handling import CameraController
+from event_handle import CameraController
 from map import Hexagon
 from panda3d.core import load_prc_file_data
 

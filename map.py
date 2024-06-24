@@ -5,7 +5,6 @@ import math
 import json
 import os
 
-
 class Hexagon:
     def __init__(self, hex_id):
         self.hex_id = hex_id
@@ -43,12 +42,11 @@ class Hexagon:
         else:
             self.is_land = False
 
-
 def create_hexagon_grid(parent_node, rows=40, cols=100, size=1.0):
     vertex_format = GeomVertexFormat.getV3t2()
 
-    water_texture = TexturePool.load_texture("water_texture.jpg")
-    terrain_texture = TexturePool.load_texture("terrain_texture.jpg")
+    water_texture = TexturePool.load_texture("assets/water_texture.jpg")
+    terrain_texture = TexturePool.load_texture("assets/terrain_texture.jpg")
 
     if os.path.exists('hexagon_data.json'):
         os.remove('hexagon_data.json')

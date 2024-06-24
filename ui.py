@@ -3,7 +3,6 @@
 from direct.gui.DirectGui import DirectFrame, DirectButton, OnscreenImage
 from panda3d.core import TransparencyAttrib
 
-
 class MenuUI:
     def __init__(self, base):
         self.base = base
@@ -17,7 +16,7 @@ class MenuUI:
 
         # Add background image
         self.background_image = OnscreenImage(parent=self.menu_frame,
-                                              image='menu_background.jpg',  # Path to your background image
+                                              image='assets/menu_background.jpg',  # Path to your background image
                                               scale=(1.33, 1, 1))  # Adjust the scale as needed
         self.background_image.setTransparency(TransparencyAttrib.MAlpha)
 

@@ -3,7 +3,7 @@
 from direct.showbase.ShowBase import ShowBase
 from ui import MenuUI
 from event_handling import CameraController
-from map import create_hexagon_grid
+from map import Hexagon
 from panda3d.core import load_prc_file_data
 
 load_prc_file_data('', 'load-display pandagl')
@@ -15,7 +15,7 @@ class HexagonGridApp(ShowBase):
         self.camera_controller = CameraController(self)  # Set up camera controls
 
     def create_hexagon_grid(self):
-        create_hexagon_grid(self.render)  # Create hexagon grid
+        Hexagon.create_hexagon_grid(self.render)  # Create hexagon grid
 
 def run_hexagon_grid_app():
     app = HexagonGridApp()

@@ -6,15 +6,12 @@ import json
 import os
 
 class Hexagon:
-    def __init__(self, hex_id):
-        self.hex_id = hex_id
-        self.name = None
-        self.is_land = None
-        self.terrain = None
-        self.population = None
-        self.infrastructure = None
+    vertex_format = GeomVertexFormat.getV3t2()
+    water_texture = TexturePool.load_texture("assets/water_texture.jpg")
+    terrain_texture = TexturePool.load_texture("assets/terrain_texture.jpg")
 
-    def set_attributes(self, is_land, name, terrain, population, infrastructure):
+    def __init__(self, hex_id, is_land, name, terrain, population, infrastructure):
+        self.hex_id = hex_id
         self.is_land = is_land
         self.name = name
         self.terrain = terrain
@@ -36,78 +33,71 @@ class Hexagon:
             json.dump(self.to_dict(), f)
             f.write('\n')
 
-    def set_is_land(self, row, col):
-        if 16 <= row <= 40 and 64 <= col <= 160:
-            self.is_land = True
-        else:
-            self.is_land = False
+    @staticmethod
+    def set_is_land(row, col):
+        return 16 <= row <= 40 and 64 <= col <= 160
 
-def create_hexagon_grid(parent_node, rows=40, cols=100, size=1.0):
-    vertex_format = GeomVertexFormat.getV3t2()
+    @classmethod
+    def create_hexagon_grid(cls, parent_node, rows=40, cols=100, size=1.0):
+        if os.path.exists('hexagon_data.json'):
+            os.remove('hexagon_data.json')
 
-    water_texture = TexturePool.load_texture("assets/water_texture.jpg")
-    terrain_texture = TexturePool.load_texture("assets/terrain_texture.jpg")
+        province_data = {}
 
-    if os.path.exists('hexagon_data.json'):
-        os.remove('hexagon_data.json')
+        for row in range(rows):
+            for col in range(cols):
+                hex_id = f'{row}_{col}'
+                is_land = cls.set_is_land(row, col)
+                hexagon = Hexagon(hex_id, is_land, f'Hexagon {row}_{col}', 'Plains', 100, 'Road')
+                hexagon.save_to_json('hexagon_data.json')
 
-    province_data = {}
+                vertex_data = GeomVertexData('hexagon', cls.vertex_format, Geom.UHStatic)
+                vertex_writer = GeomVertexWriter(vertex_data, 'vertex')
+                texcoord_writer = GeomVertexWriter(vertex_data, 'texcoord')
 
-    for row in range(rows):
-        for col in range(cols):
-            hex_id = f'{row}_{col}'
-            hexagon = Hexagon(hex_id)
-            hexagon.set_is_land(row, col)
-            hexagon.set_attributes(hexagon.is_land, f'Hexagon {row}_{col}', 'Plains', 100, 'Road')
+                x_offset = col * 3 / 2 * size
+                y_offset = row * math.sqrt(3) * size - (col % 2) * math.sqrt(3) / 2 * size
 
-            vertex_data = GeomVertexData('hexagon', vertex_format, Geom.UHStatic)
-            vertex_writer = GeomVertexWriter(vertex_data, 'vertex')
-            texcoord_writer = GeomVertexWriter(vertex_data, 'texcoord')
+                angle_offset = 0
+                vertices = [
+                    (size * math.cos(angle_offset + i * math.pi / 3) + x_offset,
+                     size * math.sin(angle_offset + i * math.pi / 3) + y_offset,
+                     0)
+                    for i in range(6)
+                ]
 
-            x_offset = col * 3 / 2 * size
-            y_offset = row * math.sqrt(3) * size - (col % 2) * math.sqrt(3) / 2 * size
+                texcoords = [
+                    (0.5 + 0.5 * math.cos(angle_offset + i * math.pi / 3),
+                     0.5 + 0.5 * math.sin(angle_offset + i * math.pi / 3))
+                    for i in range(6)
+                ]
 
-            angle_offset = 0
-            vertices = [
-                (size * math.cos(angle_offset + i * math.pi / 3) + x_offset,
-                 size * math.sin(angle_offset + i * math.pi / 3) + y_offset,
-                 0)
-                for i in range(6)
-            ]
+                for vertex, texcoord in zip(vertices, texcoords):
+                    vertex_writer.addData3(*vertex)
+                    texcoord_writer.addData2(*texcoord)
 
-            texcoords = [
-                (0.5 + 0.5 * math.cos(angle_offset + i * math.pi / 3),
-                 0.5 + 0.5 * math.sin(angle_offset + i * math.pi / 3))
-                for i in range(6)
-            ]
+                triangles = GeomTriangles(Geom.UHStatic)
+                for i in range(4):
+                    triangles.addVertices(0, i + 1, i + 2)
+                triangles.addVertices(0, 5, 1)
 
-            for vertex, texcoord in zip(vertices, texcoords):
-                vertex_writer.addData3(*vertex)
-                texcoord_writer.addData2(*texcoord)
+                geom = Geom(vertex_data)
+                geom.addPrimitive(triangles)
 
-            triangles = GeomTriangles(Geom.UHStatic)
-            for i in range(4):
-                triangles.addVertices(0, i + 1, i + 2)
-            triangles.addVertices(0, 5, 1)
+                geom_node = GeomNode(hex_id)
+                geom_node.addGeom(geom)
 
-            geom = Geom(vertex_data)
-            geom.addPrimitive(triangles)
+                hex_node = parent_node.attachNewNode(geom_node)
 
-            geom_node = GeomNode(hex_id)
-            geom_node.addGeom(geom)
+                if hexagon.is_land:
+                    hex_node.setTexture(cls.terrain_texture)
+                else:
+                    hex_node.setTexture(cls.water_texture)
 
-            hex_node = parent_node.attachNewNode(geom_node)
+                province_key = f'Province_{row}_{col}'
+                if province_key not in province_data:
+                    province_data[province_key] = []
+                province_data[province_key].append(hexagon.to_dict())
 
-            if hexagon.is_land:
-                hex_node.setTexture(terrain_texture)
-            else:
-                hex_node.setTexture(water_texture)
-
-            province_key = f'Province_{row}_{col}'
-            if province_key not in province_data:
-                province_data[province_key] = []
-            hexagon.save_to_json('hexagon_data.json')
-            province_data[province_key].append(hexagon.to_dict())
-
-    with open('hexagon_data.json', 'w') as f:
-        json.dump(province_data, f, indent=4)
+        with open('hexagon_data.json', 'w') as f:
+            json.dump(province_data, f, indent=4)

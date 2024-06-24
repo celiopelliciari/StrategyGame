@@ -1,10 +1,10 @@
-# menu.py starts
-# TODO: loading screen
+# ui.py
+
 from direct.gui.DirectGui import DirectFrame, DirectButton, OnscreenImage
 from panda3d.core import TransparencyAttrib
 
 
-class Menu:
+class MenuUI:
     def __init__(self, base):
         self.base = base
         self.setup_menu()
@@ -42,6 +42,3 @@ class Menu:
 
     def exit_game(self):
         self.base.userExit()  # Close the game
-
-
-# menu.py ends

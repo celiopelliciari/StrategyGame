@@ -1,20 +1,8 @@
-# display file starts
+# event_handling.py
 
 from direct.task import Task
-from panda3d.core import load_prc_file_data
-import tkinter as tk
 
-
-def get_screen_resolution():
-    root = tk.Tk()
-    root.withdraw()  # Hide the root window
-    screen_width = root.winfo_screenwidth()
-    screen_height = root.winfo_screenheight()
-    root.destroy()
-    return screen_width, screen_height
-
-
-def setup_camera(app):
+def setup_camera_controls(app):
     app.disableMouse()  # Disable the default mouse-based camera controls
     app.camera.setPos(0, 0, 100)  # Position the camera
     app.camera.lookAt(0, 0, 0)  # Make the camera look at the hexagon
@@ -55,12 +43,3 @@ def setup_camera(app):
 
     # Task for continuous camera movement
     app.taskMgr.add(move_camera, "MoveCameraTask")
-
-
-# Set the window size to match the screen resolution
-screen_width, screen_height = get_screen_resolution()
-load_prc_file_data('', f'win-size {screen_width} {screen_height}')
-
-
-
-# display file ends

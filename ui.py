@@ -3,6 +3,7 @@
 from direct.gui.DirectGui import DirectFrame, DirectButton, OnscreenImage
 from panda3d.core import TransparencyAttrib
 
+
 class MenuUI:
     def __init__(self, base):
         self.base = base

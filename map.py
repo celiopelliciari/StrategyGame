@@ -1,8 +1,12 @@
-from panda3d.core import GeomVertexFormat, GeomVertexData, GeomVertexWriter, Geom, GeomTriangles, GeomNode
+# map.py
+
+from panda3d.core import (
+    GeomVertexFormat, GeomVertexData, GeomVertexWriter, Geom, GeomTriangles,
+    GeomNode, BitMask32, CollisionNode, CollisionPolygon
+)
 import math
 import json
 import os
-
 
 class Hexagon:
     # Define the vertex format once for all hexagons
@@ -18,12 +22,14 @@ class Hexagon:
             'population': population,
             'infrastructure': infrastructure
         }
+        print(f"Created Hexagon: {self.attributes}")
 
     def save_to_json(self, file_path):
         # Save hexagon data to JSON file
         with open(file_path, 'a') as f:
             json.dump(self.attributes, f)
             f.write('\n')
+        print(f"Saved hexagon {self.attributes['hex_id']} to JSON")
 
     @staticmethod
     def is_land(row, col):
@@ -40,6 +46,7 @@ class Hexagon:
              0)
             for i in range(6)
         ]
+        print(f"Generated vertices: {vertices}")
         return vertices
 
     @staticmethod
@@ -50,6 +57,7 @@ class Hexagon:
              0.5 + 0.5 * math.sin(angle_offset + i * math.pi / 3))
             for i in range(6)
         ]
+        print(f"Generated texcoords: {texcoords}")
         return texcoords
 
     @classmethod
@@ -71,7 +79,23 @@ class Hexagon:
         geom = Geom(vertex_data)
         geom.addPrimitive(triangles)
 
+        print(f"Created geometry for hexagon")
         return geom
+
+    @staticmethod
+    def create_collision_polygon(vertices):
+        # Create collision polygons for a hexagon
+        collision_node = CollisionNode('collision')
+        collision_polygon1 = CollisionPolygon(*vertices[:3])
+        collision_polygon2 = CollisionPolygon(*vertices[3:])
+        collision_node.addSolid(collision_polygon1)
+        collision_node.addSolid(collision_polygon2)
+
+        collision_node.setFromCollideMask(BitMask32.bit(1))
+        collision_node.setIntoCollideMask(BitMask32.allOff())
+
+        print(f"Created collision polygon")
+        return collision_node
 
     @classmethod
     def create_hexagon_grid(cls, parent_node, rows=40, cols=100, size=1.0):
@@ -95,14 +119,20 @@ class Hexagon:
                 texcoords = cls.generate_texcoords()
 
                 geom = cls.create_hexagon_geom(vertices, texcoords)
-
                 geom_node = GeomNode(hex_id)
                 geom_node.addGeom(geom)
-
                 hex_node = parent_node.attachNewNode(geom_node)
 
-                # Set the color based on whether the hexagon is land or water
-                hex_node.setColor(0, 1, 0, 1) if is_land else hex_node.setColor(0, 0, 1, 1)
+                # Set color instead of texture
+                if is_land:
+                    hex_node.setColor(0, 1, 0, 1)  # Green for land
+                else:
+                    hex_node.setColor(0, 0, 1, 1)  # Blue for water
+
+                # Add collision polygon
+                collision_node = cls.create_collision_polygon(vertices)
+                collision_node_path = hex_node.attachNewNode(collision_node)
+                collision_node_path.setTag('hex_id', hex_id)
 
                 province_key = f'Province_{row}_{col}'
                 if province_key not in province_data:
@@ -111,3 +141,4 @@ class Hexagon:
 
         with open('hexagon_data.json', 'w') as f:
             json.dump(province_data, f, indent=4)
+        print("Created hexagon grid and saved to JSON")
